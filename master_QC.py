@@ -3,7 +3,6 @@ from simpledbf import Dbf5
 import geopandas as gpd
 import fiona 
 from threading import Timer
-from distutils.dir_util import copy_tree
 import shutil 
 from pathlib import Path
 import gc
@@ -17,13 +16,15 @@ corrupt_path = 'D:/QC_Bucket/INVALID/CORRUPT'
 geometry_path = 'D:/QC_Bucket/INVALID/GEOMETRY'
 noSHX_path = 'D:/QC_Bucket/INVALID/INDEX'
 
+pathlist = [path1, topology_path, reproject_path, corrupt_path, geometry_path, noSHX_path]
+
 # This projection string is present in the .prj file if projection is UTM Zone36N (NEOMs projection):
 projection_string = 'PROJCS["WGS_1984_UTM_Zone_36N",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",33.0],PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]'
 
-# These are the possible file extensions for a shapefile so they get moved together as 1
+# These are the possible file extensions for a shapefile so they get moved together as one
 extensions = ['.cpg', '.dbf', '.prj', '.sbn', '.sbx', '.shp', '.shx', '.xml']
 
-# these counters keep track of the amount of files and errors
+# These counters keep track of the amount of files and errors
 file_count = 0
 prj_count = 0
 empty_count = 0
@@ -33,29 +34,25 @@ no_shx_count = 0
 
 # Start of program
 print('Workin on it...')
-print('Creating folders if they dont exist')
+print('Creating folders if they dont already exist...')
 
-os.makedirs(os.path.dirname(path1), exist_ok=True)
-os.makedirs(os.path.dirname(topology_path), exist_ok=True)
-os.makedirs(os.path.dirname(reproject_path), exist_ok=True)
-os.makedirs(os.path.dirname(corrupt_path), exist_ok=True)
-os.makedirs(os.path.dirname(geometry_path), exist_ok=True)
-os.makedirs(os.path.dirname(noSHX_path), exist_ok=True)
+for path in pathlist:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
 
 print('Folders have been set up')
 
 # Walk through the users QA RAW folder and do stuff:
 for root, dirs, file in os.walk(path1):
     for name in file:      
-            
-# PROJECTION CHECK
+# 1. PROJECTION CHECK
 
             if name.endswith(".prj"):
                 root_name = Path(f'{name}').stem
                 file_count += 1
                 with open(f'{root}/{name}') as f:
                     first_line = f.readline()
-                    if first_line == projection_string:                 
+                    if first_line == projection_string:  
+                        # Shapefile is correctly projected, do nothing
                         pass    
                     else:
                         prj_count += 1
@@ -66,7 +63,7 @@ for root, dirs, file in os.walk(path1):
                                 shutil.copy2(f'{root}/{root_name}{ex}', f'{reproject_path}/{root_name}{ex}')
                             else:
                                 print('No file of that kind exists') 
-# CORRUPTION CHECK
+# 2. CORRUPTION CHECK
 
             if name.endswith(".dbf"):
                 root_name = Path(f'{root}/{name}').stem
@@ -81,7 +78,7 @@ for root, dirs, file in os.walk(path1):
                             else:
                                 print('No file of that kind exists') 
 
-# TOPOLOGY/GEOMETRY CHECK
+# 3. GEOMETRY CHECK
 
             if name.endswith("shp"):
                     root_name = Path(f'{root}/{name}').stem
@@ -101,6 +98,7 @@ for root, dirs, file in os.walk(path1):
                                         shutil.copy2(f'{root}/{root_name}{ex}', f'{geometry_path}/{root_name}{ex}')
                                     else:
                                         print('No file of that kind exists')
+# 4. TOPOLOGY/OVERLAP CHECK
 
                             if gdf.shape[0] < 200000:
                                 sdf = gdf.sindex.query(gdf.geometry, predicate='overlaps')
