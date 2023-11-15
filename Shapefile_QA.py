@@ -9,14 +9,15 @@ import gc
 
 
 # These folders will be set up on the users D: drive
-path1 = 'D:/QC_Bucket/RAW'
-topology_path = 'D:/QC_Bucket/INVALID/TOPOLOGY'
-reproject_path = 'D:/QC_Bucket/INVALID/REPROJECT'
-corrupt_path = 'D:/QC_Bucket/INVALID/CORRUPT'
-geometry_path = 'D:/QC_Bucket/INVALID/GEOMETRY'
-noSHX_path = 'D:/QC_Bucket/INVALID/INDEX'
+path1 = 'D:/QC_Bucket/RAW/'
+valid_path = 'D:/QC_Bucket/VALID/QC_SHAPEFILES/'
+topology_path = 'D:/QC_Bucket/INVALID/TOPOLOGY/'
+reproject_path = 'D:/QC_Bucket/INVALID/REPROJECT/'
+corrupt_path = 'D:/QC_Bucket/INVALID/CORRUPT/'
+geometry_path = 'D:/QC_Bucket/INVALID/GEOMETRY/'
+noSHX_path = 'D:/QC_Bucket/INVALID/INDEX/'
 
-pathlist = [path1, topology_path, reproject_path, corrupt_path, geometry_path, noSHX_path]
+pathlist = [path1, valid_path, topology_path, reproject_path, corrupt_path, geometry_path, noSHX_path]
 
 # This projection string is present in the .prj file if projection is UTM Zone36N (NEOMs projection):
 projection_string = 'PROJCS["WGS_1984_UTM_Zone_36N",GEOGCS["GCS_WGS_1984",DATUM["D_WGS_1984",SPHEROID["WGS_1984",6378137.0,298.257223563]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",500000.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",33.0],PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0]]'
@@ -78,7 +79,7 @@ for root, dirs, file in os.walk(path1):
                             else:
                                 print('No file of that kind exists') 
 
-# 3. GEOMETRY CHECK
+# 3. SHAPEFILE GEOMETRY CHECK
 
             if name.endswith("shp"):
                     root_name = Path(f'{root}/{name}').stem
@@ -98,7 +99,8 @@ for root, dirs, file in os.walk(path1):
                                         shutil.copy2(f'{root}/{root_name}{ex}', f'{geometry_path}/{root_name}{ex}')
                                     else:
                                         print('No file of that kind exists')
-# 4. TOPOLOGY/OVERLAP CHECK
+            
+# 4. SHAPEFILE TOPOLOGY/OVERLAP CHECK
 
                             if gdf.shape[0] < 200000:
                                 sdf = gdf.sindex.query(gdf.geometry, predicate='overlaps')
