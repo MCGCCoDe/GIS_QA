@@ -7,6 +7,13 @@ import shutil
 from pathlib import Path
 import gc
 
+from QA.projection_QA import *
+from QA.corruption_QA import * 
+from QA.geometry_QA import *
+from QA.topology_QA import *
+from QA.move_valid import *
+
+# need to implement os path joins to reduce string concat errors...
 
 # These folders will be set up on the users D: drive
 path1 = 'D:/QC_Bucket/RAW/'
@@ -25,13 +32,6 @@ projection_string = 'PROJCS["WGS_1984_UTM_Zone_36N",GEOGCS["GCS_WGS_1984",DATUM[
 # These are the possible file extensions for a shapefile so they get moved together as one
 extensions = ['.cpg', '.dbf', '.prj', '.sbn', '.sbx', '.shp', '.shx', '.xml']
 
-# These counters keep track of the amount of files and errors
-file_count = 0
-prj_count = 0
-empty_count = 0
-geom_bad_count = 0
-topo_bad_count = 0
-no_shx_count = 0
 
 # Start of program
 print('Workin on it...')
@@ -42,99 +42,21 @@ for path in pathlist:
 
 print('Folders have been set up')
 
-# Walk through the users QA RAW folder and do stuff:
-for root, dirs, file in os.walk(path1):
-    for name in file:      
+# EACH OF THESE FUNCTIONS = ONE ITERATION OF OF THE RAW FILE FOLDER: File numbers get culled based on whether they pass the previous test
+     
 # 1. PROJECTION CHECK
+projection_check(path1, projection_string, reproject_path, extensions)
 
-            if name.endswith(".prj"):
-                root_name = Path(f'{name}').stem
-                file_count += 1
-                with open(f'{root}/{name}') as f:
-                    first_line = f.readline()
-                    if first_line == projection_string:  
-                        # Shapefile is correctly projected, do nothing
-                        pass    
-                    else:
-                        prj_count += 1
-                        print(f'Incorrect projection - {root}/{name}')
-                        # # move non-projected shapefile (moves all associated sidecar files - if they exist)                        
-                        for ex in extensions:
-                            if os.path.isfile(f'{root}/{root_name}{ex}'):
-                                shutil.copy2(f'{root}/{root_name}{ex}', f'{reproject_path}/{root_name}{ex}')
-                            else:
-                                print('No file of that kind exists') 
 # 2. CORRUPTION CHECK
-
-            if name.endswith(".dbf"):
-                root_name = Path(f'{root}/{name}').stem
-                attr_table = Dbf5(f'{root}/{name}')
-                if attr_table.numrec < 1: 
-                    empty_count += 1
-                    print(f'{root}/{name} is corrupt')
-                    # Move corrupt shapefile (moves all associated sidecar files - if they exist) 
-                    for ex in extensions:
-                            if os.path.isfile(f'{root}/{root_name}{ex}'):
-                                shutil.copy2(f'{root}/{root_name}{ex}', f'{corrupt_path}/{root_name}{ex}')
-                            else:
-                                print('No file of that kind exists') 
+corruption_check(path1, corrupt_path, extensions)
 
 # 3. SHAPEFILE GEOMETRY CHECK
-
-            if name.endswith("shp"):
-                    root_name = Path(f'{root}/{name}').stem
-                    try: 
-                        gdf = gpd.read_file(f'{root}/{name}')
-                        # We only check Topology/Geometry errors for polygons and multilines
-                        if 'Point' in gdf.geom_type:
-                            pass
-                        else:
-                            geometry_results = gdf.is_valid.values
-                            if False in geometry_results:
-                                geom_bad_count += 1
-                                print(f"There is a geometry error in {root}/{name}")
-                                # Remove broken shapefile (moves all associated sidecar files - if they exist) 
-                                for ex in extensions:
-                                    if os.path.isfile(f'{root}/{root_name}{ex}'):
-                                        shutil.copy2(f'{root}/{root_name}{ex}', f'{geometry_path}/{root_name}{ex}')
-                                    else:
-                                        print('No file of that kind exists')
-            
+geometry_check(path1, noSHX_path, geometry_path, extensions)
+           
 # 4. SHAPEFILE TOPOLOGY/OVERLAP CHECK
-
-                            if gdf.shape[0] < 200000:
-                                sdf = gdf.sindex.query(gdf.geometry, predicate='overlaps')
-                            if sdf.size != 0:
-                                # Move overlapping shapefile (moves all associated sidecar files - if they exist) 
-                                print(f'{root}/{name} - Shapefile has overlapping features')
-                                topo_bad_count += 1
-                                for ex in extensions:
-                                        if os.path.isfile(f'{root}/{root_name}{ex}'):
-                                            shutil.copy2(f'{root}/{root_name}{ex}', f'{topology_path}/{root_name}{ex}')
-                                        else:
-                                            print('No file of that kind exists')
-                            else:
-                                # Some shapefiles are large, this clears memory after each one to keep things speedy
-                                gc.collect()
-                    except fiona.errors.DriverError: 
-                        print('{root}/{name} has no shx and wont be able to open')
-                        no_shx_count += 1
-                        for ex in extensions:
-                            if os.path.isfile(f'{root}/{root_name}{ex}'):
-                                shutil.copy2(f'{root}/{root_name}{ex}', f'{topology_path}/{root_name}{ex}')
-                            else:
-                                print('No file of that kind exists')
+topology_check(path1, noSHX_path, topology_path, extensions)      
                         
-
-print(f'{file_count} shapefiles have been checked')  
-if file_count < 1:
-    print('QA folders are initialised, load in some raw shapefiles and run the program again')
-else:               
-    print(f'{empty_count} files are corrupt and have been moved to the CORRUPT sub-folder') 
-    print(f'{prj_count} files need reprojecting and have been moved to the REPROJECT sub-folder')
-    print(f'{geom_bad_count} files have geometry errors and have been moved to the GEOMETRY sub-folder')
-    print(f'{topo_bad_count} files overlap and have been moved to the TOPOLOGY sub-folder')
-    print(f'{no_shx_count} files are missing shx and have been moved from the INDEX sub-folder')
-             
+# ONCE EACH TEST IS COMPLETED, THE REMAINDING FILES SHOULD BE 'VALID': So they are moved to the valid folder:
+move_valid(path1, valid_path, extensions)
 
 

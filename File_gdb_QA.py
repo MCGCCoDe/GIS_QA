@@ -1,11 +1,11 @@
 import os
-from simpledbf import Dbf5
+
 import geopandas as gpd
 import fiona 
 from threading import Timer
 import shutil 
 from pathlib import Path
-import gc
+
 
 
 
@@ -31,6 +31,6 @@ for root, dirs, file in os.walk(path1):
                 except fiona.errors.DriverSupportError as err:
                     print(f'There was a problem converting this feature class: {layer} -- {err}')
         except fiona.errors.DriverError as err:
-            print(f'ERROR: Something happened when opening this gdb, is it a file geodatabase? {err}')
+            print(f'ERROR: Something happened when opening this gdb, is it a valid file geodatabase? {err} {name}')
             pass
 
