@@ -25,6 +25,7 @@ def topology_check(path1, noSHX_path, topology_path, extensions):
                                     print(f'checking {name} for overlaps')
                                     gc.collect() 
                                     gdf = gpd.read_file(f'{root}/{name}')
+                                    # build a spatial index on the dataframe
                                     gdf.sindex
                                     # We only check Topology/Geometry errors for polygons and multilines
                                     if 'Point' in gdf.geom_type:
