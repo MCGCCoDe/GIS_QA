@@ -25,11 +25,12 @@ def topology_check(path1, noSHX_path, topology_path, extensions):
                                     print(f'checking {name} for overlaps')
                                     gc.collect() 
                                     gdf = gpd.read_file(f'{root}/{name}')
+                                    gdf.sindex
                                     # We only check Topology/Geometry errors for polygons and multilines
                                     if 'Point' in gdf.geom_type:
                                         pass
                                     else:
-                                        sdf = gdf.sindex.query(gdf.geometry, predicate='overlaps')
+                                        sdf = gdf.sindex.query(gdf.geometry, predicate='overlaps', return_all='')
                                         if sdf.size != 0:
                                             # Move overlapping shapefile (moves all associated sidecar files - if they exist) 
                                             print(f'There is an overlap in {root}/{name}')
@@ -42,9 +43,6 @@ def topology_check(path1, noSHX_path, topology_path, extensions):
                                     for ex in extensions:
                                                     if os.path.isfile(f'{root}/{root_name}{ex}'):
                                                         shutil.move(f'{root}/{root_name}{ex}', f'{topology_path}/{root_name}{ex}')     
-                                
-                                       
-                                    
                             except fiona.errors.DriverError: 
                                 print('{root}/{name} has no shx and wont be able to open')
                                 for ex in extensions:
