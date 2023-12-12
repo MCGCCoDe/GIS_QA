@@ -32,12 +32,13 @@ def geometry_check(path1, noSHX_path, geometry_path, extensions):
                                         geom_bad_count += 1
                                         print(f"There is a geometry error in {root}/{name}")
                                         # Remove broken shapefile (moves all associated sidecar files - if they exist) 
-                                        for ex in extensions:
-                                            if os.path.isfile(f'{root}/{root_name}{ex}'):
-                                                shutil.move(f'{root}/{root_name}{ex}', f'{geometry_path}/{root_name}{ex}') 
+                                        # for ex in extensions:
+                                        #     if os.path.isfile(f'{root}/{root_name}{ex}'):
+                                        #         shutil.move(f'{root}/{root_name}{ex}', f'{geometry_path}/{root_name}{ex}') 
                                         
                             except fiona.errors.DriverError: 
                                 print('{root}/{name} has no shx and wont be able to open') 
+                 
                                 no_shx_count += 1 
                                 for ex in extensions: 
                                     if os.path.isfile(f'{root}/{root_name}{ex}'): 

@@ -31,7 +31,7 @@ def topology_check(path1, noSHX_path, topology_path, extensions):
                                     if 'Point' in gdf.geom_type:
                                         pass
                                     else:
-                                        sdf = gdf.sindex.query(gdf.geometry, predicate='overlaps', return_all='')
+                                        sdf = gdf.sindex.query(gdf.geometry, predicate='overlaps')
                                         if sdf.size != 0:
                                             # Move overlapping shapefile (moves all associated sidecar files - if they exist) 
                                             print(f'There is an overlap in {root}/{name}')

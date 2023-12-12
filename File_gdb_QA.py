@@ -17,7 +17,7 @@ geometry_path = 'D:/QC_Bucket/INVALID/GEOMETRY'
 
 
 
-for root, dirs, file in os.walk(path1):
+for root, dirs, file in os.walk('C:\Users\SeanGyuris\Downloads\Order_1W1KLI\ll_gda2020\filegdb\whole_of_dataset\victoria'):
     for name in dirs:   
         # Get all the layers from the .gdb file 
         try:

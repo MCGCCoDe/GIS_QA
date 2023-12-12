@@ -30,9 +30,9 @@ def projection_check(path1, projection_string, reproject_path, extensions):
                             prj_count += 1
                             print(f'Incorrect projection - {root}/{name}')
                             # # move non-projected shapefile (moves all associated sidecar files - if they exist)                        
-                            for ex in extensions:
-                                if os.path.isfile(f'{root}/{root_name}{ex}'):
-                                    shutil.move(f'{root}/{root_name}{ex}', f'{reproject_path}/{root_name}{ex}')
+                            # for ex in extensions:
+                            #     if os.path.isfile(f'{root}/{root_name}{ex}'):
+                            #         shutil.move(f'{root}/{root_name}{ex}', f'{reproject_path}/{root_name}{ex}')
                          
     print(f'{file_count} shapefiles have been checked')  
     if file_count < 1:

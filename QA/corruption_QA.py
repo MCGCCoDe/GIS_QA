@@ -21,8 +21,8 @@ def corruption_check(path1, corrupt_path, extensions):
                     empty_count += 1
                     print(f'{root}/{name} is corrupt')
                     # Move corrupt shapefile (moves all associated sidecar files - if they exist) 
-                    for ex in extensions:
-                            if os.path.isfile(f'{root}/{root_name}{ex}'):
-                                shutil.move(f'{root}/{root_name}{ex}', f'{corrupt_path}/{root_name}{ex}')
+                    # for ex in extensions:
+                    #         if os.path.isfile(f'{root}/{root_name}{ex}'):
+                    #             shutil.move(f'{root}/{root_name}{ex}', f'{corrupt_path}/{root_name}{ex}')
                     
     print(f'{empty_count} files are corrupt and have been moved to the CORRUPT sub-folder')
